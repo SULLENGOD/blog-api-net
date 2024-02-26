@@ -1,8 +1,9 @@
-﻿namespace PostsService.DTOs;
+﻿using MongoDB.Entities;
 
-public class PostDto
+namespace SearchService.Models;
+
+public class Post : Entity
 {
-    public Guid Id { get; set; }
     public string Title { get; set; }
     public string Content { get; set; }
     public string Excerp { get; set; }
