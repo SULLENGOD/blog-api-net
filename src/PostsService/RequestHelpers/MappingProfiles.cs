@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Contracts;
 using PostsService.DTOs;
 using PostsService.Entities;
 
@@ -10,5 +11,8 @@ public class MappingProfiles : Profile
     {
         CreateMap<Post, PostDto>();
         CreateMap<CreatePostDto, Post>();
+        CreateMap<PostDto, PostCreated>();
+        CreateMap<Post, PostUpdated>();
+        CreateMap<Post, PostDeleted>();
     }
 }

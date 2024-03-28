@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Contracts;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PostsService.Data;
@@ -14,11 +16,13 @@ public class PostController : ControllerBase
 {
     private readonly PostDbContext _context;
     private readonly IMapper _mapper;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public PostController(PostDbContext context, IMapper mapper)
+    public PostController(PostDbContext context, IMapper mapper, IPublishEndpoint publishEndpoint)
     {
         _context = context;
         _mapper = mapper;
+        _publishEndpoint = publishEndpoint;
     }
 
     [HttpGet]
@@ -50,10 +54,13 @@ public class PostController : ControllerBase
         var post = _mapper.Map<Post>(postDto);
 
         _context.Posts.Add(post);
-        
-        //TODO: Make excerp.
+
+        var newPost = _mapper.Map<PostDto>(post);
+
+        await _publishEndpoint.Publish(_mapper.Map<PostCreated>(newPost));
 
         var result = await _context.SaveChangesAsync() > 0;
+
         if(!result) return BadRequest("Soemthing Wrong");
 
         return CreatedAtAction(nameof(GetPostById),
@@ -75,6 +82,8 @@ public class PostController : ControllerBase
         post.Tags = updatePostDto.Tags ?? post.Tags;
         post.Categories = updatePostDto.Categories ?? post.Categories;
 
+        await _publishEndpoint.Publish(_mapper.Map<PostUpdated>(post));
+
         var result = await _context.SaveChangesAsync() > 0;
 
         if(result) return Ok();
@@ -89,6 +98,8 @@ public class PostController : ControllerBase
         if(post == null) return NotFound();
 
         _context.Posts.Remove(post);
+
+        await _publishEndpoint.Publish<PostDeleted>(new { Id = post.Id.ToString() });
 
         var result = _context.SaveChanges() > 0;
         if(!result) return BadRequest("Somethin Wrong");

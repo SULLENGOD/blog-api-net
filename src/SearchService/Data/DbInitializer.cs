@@ -23,7 +23,7 @@ public class DbInitializer
         var httpClient = scope.ServiceProvider.GetRequiredService<PostSvcHttpClient>();
         var posts = await httpClient.GetPostsForSearchDb();
 
-        Console.WriteLine(posts.Count + "Posts");
+        Console.WriteLine(posts.Count + " Posts found");
 
         if(posts.Count > 0) await DB.SaveAsync(posts);
     }    
